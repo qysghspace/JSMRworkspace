@@ -67,34 +67,34 @@
 ### 5.2 配置文件修改
 找到项目 src/main/resources 目录下的 application.yml 配置文件，修改以下核心配置（根据自身环境调整）：
 spring:
-  # 数据库配置
+  #### 数据库配置
   datasource:
     url: jdbc:mysql://localhost:3306/hmdp?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root  # 你的MySQL用户名（默认root）
     password: 123456  # 你的MySQL密码（替换为自己的密码）
     driver-class-name: com.mysql.cj.jdbc.Driver
-  # Redis配置
+  #### Redis配置
   redis:
     host: localhost  # Redis服务器地址（本地默认localhost）
     port: 6379  # Redis端口（默认6379）
     password:  # Redis密码（无密码则留空，有密码则填写对应密码）
     database: 0  # Redis数据库索引（默认0）
     timeout: 10000ms  # 连接超时时间
-# JWT配置（可根据需求调整）
+#### JWT配置（可根据需求调整）
 jwt:
   secret: hmdp123456  # JWT密钥（自定义，建议复杂一些）
   expiration: 86400000  # JWT有效期（单位：ms，默认24小时）
-# 服务器配置
+#### 服务器配置
 server:
   port: 8080  # 后端端口（默认8080，可修改，需与前端配置一致）
-5.3 依赖下载与项目启动
+### 5.3 依赖下载与项目启动
 1. 用IDEA打开项目，IDEA会自动识别Maven项目，等待Maven自动下载依赖（若下载缓慢，可切换阿里云Maven镜像源）
 2. 启动本地Redis服务：确保Redis服务正常运行（可通过Redis客户端连接测试）
 3. 启动后端项目：找到项目主启动类 com.hmdp.HmdpApplication，右键点击“Run HmdpApplication”，启动成功后，控制台会输出“Started HmdpApplication in XXX seconds”
 4. 启动前端项目：将前端静态资源导入到IDEA中，打开前端项目的 index.html 文件，右键选择“Open in Browser”，即可访问前端页面（确保后端已启动，否则无法正常交互）
-5.4 启动验证
+### 5.4 启动验证
 后端启动成功后，访问 http://localhost:8080，若出现“404”页面，说明后端启动正常（无首页接口，属于正常现象）；前端页面打开后，可尝试短信登录，登录成功后即可正常使用所有功能。
-六、项目核心难点与解决方案
+## 六、项目核心难点与解决方案
 项目核心难点集中在高并发场景下的缓存优化、并发安全问题，以下是具体难点及落地解决方案：
 核心难点
 解决方案
@@ -117,9 +117,10 @@ Redis+Lua脚本原子操作
 接口高并发限流
 Redis计数器限流
 基于Redis Incr命令统计单位时间内的请求次数，超过阈值则拒绝请求，保护接口
-七、项目目录结构
+## 七、项目目录结构
 项目目录结构对照B站黑马点评课程项目，按分层架构设计，便于维护和扩展，具体结构如下（核心目录）：
 
+```
 hmdp
 ├── src/main/java/com/hmdp
 │   ├── config       # 配置类目录（Redis配置、拦截器配置、跨域配置等，与课程完全一致）
@@ -140,26 +141,27 @@ hmdp
 │   └── mapper           # 映射文件
 ├── pom.xml  # Maven依赖配置文件
 └── README.md  # 项目说明文档
-八、常见问题与排查方案
+```
+## 八、常见问题与排查方案
 项目启动或运行过程中，可能遇到以下问题，可按对应方案排查：
-8.1 Redis相关问题
+### 8.1 Redis相关问题
 - 问题1：Redis连接失败，控制台报“Could not connect to Redis”
 - 排查：① 检查Redis服务是否启动；② 检查application.yml中Redis的host、port、password是否正确；③ 关闭本地防火墙，避免端口被拦截；④ 确认Redis允许本地连接（修改redis.conf配置）。
 - 问题2：Redis操作报错，报“NOAUTH Authentication required”
 - 排查：Redis设置了密码，但application.yml中未配置Redis密码，补充配置redis.password即可。
-8.2 数据库相关问题
+### 8.2 数据库相关问题
 - 问题1：数据库连接失败，报“Access denied for user 'root'@'localhost'”
 - 排查：检查application.yml中MySQL的username、password是否正确，确认MySQL服务正常运行。
 - 问题2：执行SQL脚本报错，报“Unknown column 'xxx' in 'field list'”
 - 排查：MySQL版本过低，部分语法不支持，建议升级到MySQL8.0；或重新导入sql脚本，确保脚本完整。
-8.3 项目启动相关问题
+### 8.3 项目启动相关问题
 - 问题1：Maven依赖下载失败，报“Could not find artifact xxx”
 - 排查：切换阿里云Maven镜像源，在pom.xml中添加阿里云镜像配置，或手动下载依赖导入本地仓库。
 - 问题2：项目启动报错，报“Port 8080 was already in use”
 - 排查：8080端口被其他程序占用，可修改application.yml中server.port为其他端口（如8081），或关闭占用8080端口的程序。
 - 问题3：前端页面无法访问后端接口，报“跨域问题”
 - 排查：项目已配置全局跨域拦截器，若仍出现跨域，检查前端请求地址是否正确（需与后端端口一致），或重启后端项目。
-8.4 业务功能相关问题
+### 8.4 业务功能相关问题
 - 问题1：秒杀时出现超卖
 - 排查：确认Redis+Lua脚本是否正确，分布式锁是否生效，检查秒杀业务逻辑中的库存扣减逻辑，确认是否按照课程讲解的“先缓存扣减、后数据库同步”流程实现。
 - 问题2：用户签到数据统计错误
@@ -168,8 +170,8 @@ hmdp
 - 排查：确认Redis List存储评论的逻辑是否正确，分页查询时的range命令使用是否规范，对照课程中评论分页的实现代码调整。
 - 问题4：优惠券领取失败或重复领取
 - 排查：检查Redis Set存储已领取用户ID的逻辑，确认领取限制（每人限领一张）是否生效，对照课程中优惠券领取的核心代码排查。
-九、学习总结与扩展建议
-9.1 学习总结
+## 九、学习总结与扩展建议
+### 9.1 学习总结
 - 掌握SpringBoot+MyBatis-Plus的后端接口开发流程，熟练实现CRUD操作
 - 熟练运用Redis多种数据结构，理解每种数据结构的应用场景
 - 掌握高并发场景下的缓存设计与优化，解决缓存三大问题
@@ -177,14 +179,14 @@ hmdp
 - 理解高并发秒杀的核心逻辑，掌握限流、防超卖、一人一单的实现方案
 - 学会排查项目中的常见问题，提升问题解决能力
 - 掌握前后端交互流程，理解前端请求与后端接口的对接逻辑
-9.2 扩展建议
+### 9.2 扩展建议
 - 引入SpringCloud，实现分布式部署（服务注册与发现、负载均衡）
 - 引入消息队列（RabbitMQ/Kafka），异步处理秒杀订单、短信发送等业务
 - 实现Redis集群，提升缓存的高可用性（主从复制、哨兵模式、集群模式）
 - 引入ElasticSearch，实现商户、笔记的全文检索功能
 - 添加日志记录（Logback/Log4j），便于问题排查与系统监控
 - 实现分布式事务，解决跨服务、跨数据库的事务一致性问题
-补充说明
+## 补充说明
 1. 本文档已整合B站黑马点评课程全部核心功能，与课程内容匹配，无需额外补充，可直接复制使用；
 2. 若项目有个性化修改（如端口、依赖版本、功能扩展），可对应修改本文档中的相关内容，修改时可对照B站课程代码调整；
 3. 项目测试数据已包含在sql脚本中（与课程提供的脚本一致），启动后可直接用于功能测试，匹配课程中的测试场景。
